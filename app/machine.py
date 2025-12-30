@@ -1,17 +1,48 @@
+from datetime import datetime
+from pandas import DataFrame
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+import joblib
+
+
 class Machine:
+    def __init__(self, df: DataFrame):
+        self.name = "Random Forest Classifier"
+        self.created_at = datetime.utcnow()
 
-    def __init__(self, df):
-        pass
+        target = df["rank"]
+        features = df[["level", "type"]]
 
-    def __call__(self, feature_basis):
-        pass
 
-    def save(self, filepath):
-        pass
+        preprocessor = ColumnTransformer(
+            transformers=[
+                ("cat", OneHotEncoder(handle_unknown="ignore"), ["type"]),
+                ("num", "passthrough", ["level"]),
+            ]
+        )
 
-    @staticmethod
-    def open(filepath):
-        pass
+        self.model = Pipeline(
+            steps=[
+                ("preprocess", preprocessor),
+                ("classifier", RandomForestClassifier(random_state=42)),
+            ]
+        )
 
-    def info(self):
-        pass
+        self.model.fit(features, target)
+
+    def __call__(self, pred_basis: DataFrame):
+        prediction = self.model.predict(pred_basis)[0]
+        probability = max(self.model.predict_proba(pred_basis)[0])
+        return prediction, probability
+
+    def save(self, filepath: str):
+        joblib.dump(self, filepath)
+
+    @classmethod
+    def open(cls, filepath: str):
+        return joblib.load(filepath)
+
+    def info(self) -> str:
+        return f"{self.name} | initialized at {self.created_at.isoformat()}"
