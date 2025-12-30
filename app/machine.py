@@ -12,14 +12,15 @@ class Machine:
         self.name = "Random Forest Classifier"
         self.created_at = datetime.utcnow()
 
-        target = df["rank"]
-        features = df[["level", "type"]]
+        # 🎯 Target (what we predict)
+        target = df["Rarity"]
 
+        # 🎯 Features (what we learn from)
+        features = df[["Level", "Health", "Energy", "Sanity"]]
 
         preprocessor = ColumnTransformer(
             transformers=[
-                ("cat", OneHotEncoder(handle_unknown="ignore"), ["type"]),
-                ("num", "passthrough", ["level"]),
+                ("num", "passthrough", ["Level", "Health", "Energy", "Sanity"]),
             ]
         )
 
